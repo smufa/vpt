@@ -128,6 +128,30 @@ _handleVolumeLoad(options) {
             this._renderingContext.stopRendering();
             this._renderingContext.setVolume(reader);
         }
+    } else if (options.type === 'files') {
+        const readerClass = this._getReaderForFileType(options.filetype);
+        if (readerClass) {
+            const loaders = [];
+            options.files.forEach(file => {
+                console.log(file.name)
+                loaders.push(new BlobLoader(file));
+            });
+
+            const readers = [];
+            loaders.forEach(loader => {
+                readers.push(new readerClass(loader, {
+                    width  : options.dimensions.x,
+                    height : options.dimensions.y,
+                    depth  : options.dimensions.z,
+                    bits   : options.precision
+                }));
+            });
+             
+            this._renderingContext.stopRendering();
+
+            //Set first volume
+            this._renderingContext.setVolume(readers[0]);
+        }
     } else if (options.type === 'url') {
         const readerClass = this._getReaderForFileType(options.filetype);
         if (readerClass) {

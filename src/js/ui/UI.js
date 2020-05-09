@@ -7,6 +7,7 @@
 // #include Dropdown.js
 // #include Field.js
 // #include FileChooser.js
+// #include FilesChooser.js
 // #include Panel.js
 // #include ProgressBar.js
 // #include Radio.js
@@ -30,6 +31,7 @@ static get CLASS_FROM_TYPE() {
         'dropdown'      : Dropdown,
         'field'         : Field,
         'file-chooser'  : FileChooser,
+        'files-chooser' : FilesChooser,
         'panel'         : Panel,
         'progress-bar'  : ProgressBar,
         'radio'         : Radio,
