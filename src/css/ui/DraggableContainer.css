@@ -1,0 +1,48 @@
+/* #package css/main */
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.draggable-container {
+    --border-color     : #cccccc;
+    --selected-color   : #1a73e8;
+    --unselected-color : #f3f3f3;
+    --hover-color      : #eaeaea;
+    --text-color       : #555555;
+    --text-high-color  : #000000;
+
+    position: absolute;
+    width: 300px;
+    /* set these so Chrome doesn't return 'auto' from getComputedStyle */
+    background: var(--unselected-color);
+    border: 1px solid rgba(0, 0, 0, 1);
+    z-index: 9999;
+}
+
+.draggable-container .label {
+    color: var(--enabled-text-color);
+}
+
+.draggable-container .header {
+    margin: 5px;
+    display:inline-block;
+    width: 290px;
+}
+
+.draggable-container .icon-move {
+    background: url(../images/icons/arrows-alt-solid.svg) no-repeat;
+    cursor: move;
+
+    float: right;
+    height: 15px;
+    width: 15px;
+    background-size: auto 100%;
+
+    color: var(--enabled-text-color);
+}

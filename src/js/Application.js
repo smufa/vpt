@@ -115,6 +115,9 @@ _handleToneMapperChange(which) {
 }
 
 _handleVolumeLoad(options) {
+    if(this._sequenceWidgetDialog) {
+        this._sequenceWidgetDialog.destroy();
+    }
     if (options.type === 'file') {
         const readerClass = this._getReaderForFileType(options.filetype);
         if (readerClass) {
@@ -146,11 +149,8 @@ _handleVolumeLoad(options) {
                     bits   : options.precision
                 }));
             });
-             
-            this._renderingContext.stopRendering();
 
-            //Set first volume
-            this._renderingContext.setVolume(readers[0]);
+            this._sequenceWidgetDialog = new SequenceWidgetDialog({"readers": readers, "rendering_context": this._renderingContext});
         }
     } else if (options.type === 'url') {
         const readerClass = this._getReaderForFileType(options.filetype);
