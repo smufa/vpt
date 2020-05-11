@@ -10,17 +10,11 @@
 }
 
 .draggable-container {
-    --border-color     : #cccccc;
-    --selected-color   : #1a73e8;
-    --unselected-color : #f3f3f3;
-    --hover-color      : #eaeaea;
-    --text-color       : #555555;
-    --text-high-color  : #000000;
-
+    border-color: #cccccc;
+    background-color: #ffffff;
     position: absolute;
     width: 300px;
     /* set these so Chrome doesn't return 'auto' from getComputedStyle */
-    background: var(--unselected-color);
     border: 1px solid rgba(0, 0, 0, 1);
     z-index: 9999;
 }
@@ -30,8 +24,9 @@
 }
 
 .draggable-container .header {
-    margin: 5px;
+    padding: 5px;
     display:inline-block;
+    background: #f3f3f3;
     width: 290px;
 }
 

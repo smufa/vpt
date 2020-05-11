@@ -136,7 +136,6 @@ _handleVolumeLoad(options) {
         if (readerClass) {
             const loaders = [];
             options.files.forEach(file => {
-                console.log(file.name)
                 loaders.push(new BlobLoader(file));
             });
 
@@ -150,7 +149,7 @@ _handleVolumeLoad(options) {
                 }));
             });
 
-            this._sequenceWidgetDialog = new SequenceWidgetDialog({"readers": readers, "rendering_context": this._renderingContext});
+            this._sequenceWidgetDialog = new SequenceWidgetDialog(this._renderingContext, readers);
         }
     } else if (options.type === 'url') {
         const readerClass = this._getReaderForFileType(options.filetype);
