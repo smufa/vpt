@@ -17,6 +17,8 @@
     /* set these so Chrome doesn't return 'auto' from getComputedStyle */
     border: 1px solid rgba(0, 0, 0, 1);
     z-index: 9999;
+    top: 0;
+    right:0;
 }
 
 .draggable-container .label {

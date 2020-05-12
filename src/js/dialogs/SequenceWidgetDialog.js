@@ -11,11 +11,11 @@ class SequenceWidgetDialog extends AbstractDialog {
     constructor(renderingContext, readers, options) {
         super(UISPECS.SequenceWidgetDialog, options);
 
-        this._currentIndex = 0;
         this._stop = false;
+        this._rendering = false;
         this._renderingContext = renderingContext;
-        this._readers = readers
-        //this._binds.sequenceWidget._binds.label.innerHTML = "File sequence " + (this._currentIndex + 1) + "/" + this._readers.length;
+        this._readers = readers;
+        this.setIndex(0);
 
         this._$sequenceControls = new SequenceControls();
         this._binds.sequenceControlsContainer.add(this._$sequenceControls);
@@ -32,11 +32,13 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._handleRenderingTypeChange = this._handleRenderingTypeChange.bind(this);
         this._handleDownloadGif = this._handleDownloadGif.bind(this);
         this._handleDownloadZip = this._handleDownloadZip.bind(this);
+        this._handleClearFrames = this._handleClearFrames.bind(this);
+        this._handleAddFrame = this._handleAddFrame.bind(this);
 
         this._addEventListeners();
 
         this._sequenceContext = new SequenceContext(this._renderingContext);
-        this.renderNewVolume();
+        this.renderNewVolumeWrapper();
     }
 
     reset(readers) {
@@ -55,20 +57,24 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._binds.renderingType.addEventListener("change", this._handleRenderingTypeChange);
         this._binds.buttonDownloadGIF.addEventListener("click", this._handleDownloadGif);
         this._binds.buttonDownloadZIP.addEventListener("click", this._handleDownloadZip);
-
+        this._binds.clearFrames.addEventListener("click", this._handleClearFrames);
+        this._binds.addFrame.addEventListener("click", this._handleAddFrame);
     }
 
     _handlePlay() {
-        this._currentIndex++;
-        this.renderNewVolume().then(
-            (result) => {
+        this.setIndex(this._currentIndex + 1);
+        this.renderNewVolumeWrapper(() => {
+            if(!this._stop) {
                 this._handlePlay();
-            },
-            (error) => {
+            } else {
                 this._handleStop()
                 this._stop = false;
             }
-        );
+        },
+        () => {
+            this._handleStop()
+            this._stop = false;
+        })
     }
 
     _handleStop() {
@@ -77,55 +83,85 @@ class SequenceWidgetDialog extends AbstractDialog {
     }
 
     _handleJumpToLast() {
-        this._currentIndex = this._readers.length-1;
-        this.renderNewVolume();
+        this.setIndex(this._readers.length-1);
+        this.renderNewVolumeWrapper();
     }
 
     _handleJumoToFirst() {
-        this._currentIndex = 0;
-        this.renderNewVolume();
+        this.setIndex(0);
+        this.renderNewVolumeWrapper();
     }
 
     _handleStepForward() {
         this.incrementIndex();
-        this.renderNewVolume();
+        this.renderNewVolumeWrapper();
     }
 
     _handleStepBackward() {
         this.decrementIndex();
-        this.renderNewVolume();
+        this.renderNewVolumeWrapper();
     }
 
     incrementIndex() {
-        this._currentIndex = Math.min(this._readers.length-1, this._currentIndex + 1);
+        this.setIndex(Math.min(this._readers.length-1, this._currentIndex + 1));
     }
 
     decrementIndex() {
-        this._currentIndex = Math.max(0, this._currentIndex - 1);
+        this.setIndex(Math.max(0, this._currentIndex - 1));
+    }
+
+    setIndex(newValue) {
+        this._currentIndex = newValue;
+        if(this._currentIndex < this._readers.length) {
+            this._binds.sequenceWidget._binds.label.innerHTML = "File sequence " + (this._currentIndex + 1) + "/" + this._readers.length;
+        }
+    }
+
+    renderNewVolumeWrapper(onResult, onError) {
+        if(!this._rendering) {
+            this._rendering = true;
+            this.renderNewVolume().then(
+                () => {
+                    this._rendering = false;
+                    if(this._binds.addOnRender.isChecked()) {
+                        this._sequenceContext.addFrame(this._binds).then(
+                            () => {
+                                if(onResult) {
+                                    onResult();
+                                }
+                            }
+                        );
+                    }
+                },
+                () => {
+                    this._rendering = false;
+                    if(onError) {
+                        onError();
+                    }
+                }
+            );
+        }
     }
 
     renderNewVolume() {
         return new Promise((resolve, reject) => {
-            if(this._currentIndex > this._readers.length-1 || this._stop) {
+            if(this._currentIndex > this._readers.length-1) {
                 this._currentIndex = this._readers.length-1;
                 reject();
                 return;
             }
-            this._binds.sequenceWidget._binds.label.innerHTML = "File sequence " + (this._currentIndex + 1) + "/" + this._readers.length;
             this._renderingContext.setVolume(this._readers[this._currentIndex]);
             switch(this._binds.renderingType.getValue()) {
                 case "fixed":
                     setTimeout(() => {
                         this._renderingContext.stopRendering();
-                        this._sequenceContext.addFrame(this._binds.numberOfRenderedImages._binds.label);
-                        this._binds.buttonDownloadGIF.show();
-                        this._binds.buttonDownloadZIP.show();
                         resolve();
                         return;
                     }, this._binds.interval.value);
 
                     break;
                 case "convergence":
+                    //TODO
                     //this._renderingContext.readPixels();
                     resolve()
                     break;
@@ -138,12 +174,15 @@ class SequenceWidgetDialog extends AbstractDialog {
     }
 
     _handleIntervalChange() {
-        this._handleStop();
-        this._renderingContext.stopRendering();
+        this.reset();
     }
 
     _handleRenderingTypeChange() {
         switch(this._binds.renderingType.getValue()) {
+            case "infinite":
+                this._binds.intervalField.hide();
+                this._binds.thresholdField.hide();
+                break;
             case "fixed":
                 this._binds.intervalField.show();
                 this._binds.thresholdField.hide();
@@ -153,6 +192,7 @@ class SequenceWidgetDialog extends AbstractDialog {
                 this._binds.thresholdField.show();
                 break;
         }
+        this.reset();
     }
 
     _handleDownloadGif() {
@@ -161,6 +201,26 @@ class SequenceWidgetDialog extends AbstractDialog {
 
     _handleDownloadZip() {
         this._sequenceContext.getZip();
+    }
+
+    _handleClearFrames() {
+        this._sequenceContext = new SequenceContext(this._renderingContext);
+        this._binds.numberOfRenderedImages._binds.label.innerHTML = 0;
+        this._binds.buttonDownloadGIF.hide();
+        this._binds.buttonDownloadZIP.hide();
+    }
+
+    _handleAddFrame() {
+        this._sequenceContext.addFrame(this._binds);
+    }
+
+    reset() {
+        if(this._rendering) {
+            this._handleStop();
+            this._renderingContext.stopRendering();
+        }
+        this._rendering = false;
+        this.renderNewVolumeWrapper();
     }
 
 }
