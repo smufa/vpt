@@ -27,7 +27,6 @@ class SequenceContext {
 
         Promise.all(promises).then(
             () => {
-                console.log(canvases);
                 canvases.forEach( canvas => {
                     this._gif.addFrame(canvas, {copy: true, delay: 100});
                 });
