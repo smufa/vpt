@@ -1,0 +1,1 @@
+node raw2bvp -h 512 -w 512 -d 50 --block-size 512 < 1.raw > out.bvp
