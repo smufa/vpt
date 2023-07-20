@@ -28,10 +28,9 @@ class SequenceControls extends EventEmitter {
         this._$step_forward = this._$html.querySelector('[name="step-forward"]');
         this._$forward = this._$html.querySelector('[name="forward"]');
 
-        console.log(this._$play);
         this._$play.addEventListener('click', this._handlePlay);
         this._$step_backward.addEventListener('click', () => {
-            this.trigger('stepBckward');
+            this.trigger('stepBackward');
         });
         this._$backward.addEventListener('click', () => {
             this.trigger('jumpToFirst');
@@ -53,9 +52,13 @@ class SequenceControls extends EventEmitter {
     }
 
     _handleStop() {
+        this.stop();
+        this.trigger('stop');
+    }
+
+    stop() {
         this._$play.removeEventListener("click", this._handleStop);
         this._$play.addEventListener("click", this._handlePlay);
-        this.trigger('stop');
         this.removeClass(this._$play, "icon-stop");
         this.addClass(this._$play, "icon-play");
     }

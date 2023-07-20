@@ -8,13 +8,14 @@
 
 class SequenceWidgetDialog extends AbstractDialog {
 
-    constructor(options) {
+    constructor(renderingContext, readers, options) {
         super(UISPECS.SequenceWidgetDialog, options);
 
-        console.log(options);
-        this._renderingContext = options['rendering_context'];
-        this._readers = options['readers'];
         this._currentIndex = 0;
+        this._stop = false;
+        this._renderingContext = renderingContext;
+        this._readers = readers
+        //this._binds.sequenceWidget._binds.label.innerHTML = "File sequence " + (this._currentIndex + 1) + "/" + this._readers.length;
 
         this._$sequenceControls = new SequenceControls();
         this._binds.sequenceControlsContainer.add(this._$sequenceControls);
@@ -28,12 +29,14 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._handleStepForward = this._handleStepForward.bind(this);
         this._handleStepBackward = this._handleStepBackward.bind(this);
         this._handleIntervalChange = this._handleIntervalChange.bind(this);
+        this._handleRenderingTypeChange = this._handleRenderingTypeChange.bind(this);
+        this._handleDownloadGif = this._handleDownloadGif.bind(this);
+        this._handleDownloadZip = this._handleDownloadZip.bind(this);
 
         this._addEventListeners();
 
-        this._renderingContext.stopRendering();
-        //Set first volume
-        this._renderingContext.setVolume(this._readers[0]);
+        this._sequenceContext = new SequenceContext(this._renderingContext);
+        this.renderNewVolume();
     }
 
     reset(readers) {
@@ -46,25 +49,31 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._$sequenceControls.addEventListener('jumpToLast', this._handleJumpToLast);
         this._$sequenceControls.addEventListener('jumpToFirst', this._handleJumoToFirst);
         this._$sequenceControls.addEventListener('stepForward', this._handleStepForward);
-        this._$sequenceControls.addEventListener('stepBckward', this._handleStepBackward);
+        this._$sequenceControls.addEventListener('stepBackward', this._handleStepBackward);
 
-        this._binds.interval.addEventListener("change", this._handleIntervalChange)
+        this._binds.interval.addEventListener("change", this._handleIntervalChange);
+        this._binds.renderingType.addEventListener("change", this._handleRenderingTypeChange);
+        this._binds.buttonDownloadGIF.addEventListener("click", this._handleDownloadGif);
+        this._binds.buttonDownloadZIP.addEventListener("click", this._handleDownloadZip);
+
     }
 
     _handlePlay() {
-        this.renderingInterval = setInterval(() => {
-            this.renderNewVolume();
-            this._currentIndex++;
-            if(this._currentIndex > this._readers.length-1) {
-                this._currentIndex = 0;
+        this._currentIndex++;
+        this.renderNewVolume().then(
+            (result) => {
+                this._handlePlay();
+            },
+            (error) => {
+                this._handleStop()
+                this._stop = false;
             }
-
-        }, this._binds.interval.value);
-
+        );
     }
 
     _handleStop() {
-        clearInterval(this.renderingInterval);
+        this._stop = true;
+        this._$sequenceControls.stop();
     }
 
     _handleJumpToLast() {
@@ -78,36 +87,80 @@ class SequenceWidgetDialog extends AbstractDialog {
     }
 
     _handleStepForward() {
-        this._currentIndex = Math.min(this._readers.length-1, this._currentIndex + 1);
+        this.incrementIndex();
         this.renderNewVolume();
     }
 
     _handleStepBackward() {
-        this._currentIndex = Math.max(0, this._currentIndex - 1);
+        this.decrementIndex();
         this.renderNewVolume();
     }
 
+    incrementIndex() {
+        this._currentIndex = Math.min(this._readers.length-1, this._currentIndex + 1);
+    }
+
+    decrementIndex() {
+        this._currentIndex = Math.max(0, this._currentIndex - 1);
+    }
+
     renderNewVolume() {
-        /*
-        this._renderingContext.readPixels();
-        var gif = new GIF({
-            workers: 2,
-            quality: 10
-          });
-        console.log(gif);
-        gif.addFrame(this._renderingContext.getCanvas(), {copy: true});
-        gif.on('finished', function(blob) {
-            window.open(URL.createObjectURL(blob));
-          });
-          
-          gif.render();
-          */
-        this._renderingContext.stopRendering();
-        this._renderingContext.setVolume(this._readers[this._currentIndex]);
+        return new Promise((resolve, reject) => {
+            if(this._currentIndex > this._readers.length-1 || this._stop) {
+                this._currentIndex = this._readers.length-1;
+                reject();
+                return;
+            }
+            this._binds.sequenceWidget._binds.label.innerHTML = "File sequence " + (this._currentIndex + 1) + "/" + this._readers.length;
+            this._renderingContext.setVolume(this._readers[this._currentIndex]);
+            switch(this._binds.renderingType.getValue()) {
+                case "fixed":
+                    setTimeout(() => {
+                        this._renderingContext.stopRendering();
+                        this._sequenceContext.addFrame(this._binds.numberOfRenderedImages._binds.label);
+                        this._binds.buttonDownloadGIF.show();
+                        this._binds.buttonDownloadZIP.show();
+                        resolve();
+                        return;
+                    }, this._binds.interval.value);
+
+                    break;
+                case "convergence":
+                    //this._renderingContext.readPixels();
+                    resolve()
+                    break;
+                default:
+                    reject()
+                    return;
+            }
+        });
+        
     }
 
     _handleIntervalChange() {
         this._handleStop();
-        this._handlePlay();
+        this._renderingContext.stopRendering();
     }
+
+    _handleRenderingTypeChange() {
+        switch(this._binds.renderingType.getValue()) {
+            case "fixed":
+                this._binds.intervalField.show();
+                this._binds.thresholdField.hide();
+                break;
+            case "convergence":
+                this._binds.intervalField.hide();
+                this._binds.thresholdField.show();
+                break;
+        }
+    }
+
+    _handleDownloadGif() {
+        this._sequenceContext.getGIF();
+    }
+
+    _handleDownloadZip() {
+        this._sequenceContext.getZip();
+    }
+
 }

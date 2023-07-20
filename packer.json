@@ -14,6 +14,7 @@
         "src/uispecs/tonemappers"
     ],
     "static": {
+        "src/js/gif/gif.worker.js": "build/gif.worker.js",
         "src/images": "build/images",
         "src/index.html": "build/index.html"
     },
@@ -33,6 +34,12 @@
         "html/templates": {
             "output": "build/html/templates.json",
             "url": "html/templates.json",
+            "type": "json",
+            "mode": "files"
+        },
+        "js/mappers": {
+            "output": "build/js/mappers.js.map",
+            "url": "js/mappers.js.map",
             "type": "json",
             "mode": "files"
         },
