@@ -19,6 +19,10 @@
               "selected": true
             },
             {
+              "value": "fileSequence",
+              "label": "File sequence"
+            },
+            {
               "value": "url",
               "label": "URL"
             },
@@ -69,6 +73,63 @@
                 {
                   "type": "radio",
                   "bind": "precision",
+                  "options": [
+                    {
+                      "value": 8,
+                      "label": "8-bit",
+                      "selected": true
+                    },
+                    {
+                      "value": 16,
+                      "label": "16-bit"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "bind": "fileSequencePanel",
+      "visible": false,
+      "children": [
+        {
+          "type": "field",
+          "label": "Files:",
+          "children": [
+            {
+              "type": "files-chooser",
+              "bind": "files"
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "bind": "rawSettingsSequencePanel",
+          "visible": false,
+          "children": [
+            {
+              "type": "field",
+              "label": "Dimensions:",
+              "children": [
+                {
+                  "type": "vector",
+                  "bind": "dimensionsSequence",
+                  "value": 128,
+                  "min": 1
+                }
+              ]
+            },
+            {
+              "type": "field",
+              "label": "Precision:",
+              "children": [
+                {
+                  "type": "radio",
+                  "bind": "precisionSequence",
                   "options": [
                     {
                       "value": 8,

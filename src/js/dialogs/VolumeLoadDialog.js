@@ -12,6 +12,7 @@ constructor(options) {
     this._handleTypeChange = this._handleTypeChange.bind(this);
     this._handleLoadClick = this._handleLoadClick.bind(this);
     this._handleFileChange = this._handleFileChange.bind(this);
+    this._handleFilesChange = this._handleFilesChange.bind(this);
     this._handleURLChange = this._handleURLChange.bind(this);
     this._handleDemoChange = this._handleDemoChange.bind(this);
 
@@ -25,6 +26,7 @@ _addEventListeners() {
     this._binds.type.addEventListener('change', this._handleTypeChange);
     this._binds.loadButton.addEventListener('click', this._handleLoadClick);
     this._binds.file.addEventListener('change', this._handleFileChange);
+    this._binds.files.addEventListener('change', this._handleFilesChange);
     this._binds.url.addEventListener('input', this._handleURLChange);
     this._binds.demo.addEventListener('change', this._handleDemoChange);
 }
@@ -55,9 +57,10 @@ _getVolumeTypeFromURL(filename) {
 
 _handleLoadClick() {
     switch (this._binds.type.getValue()) {
-        case 'file' : this._handleLoadFile(); break;
-        case 'url'  : this._handleLoadURL();  break;
-        case 'demo' : this._handleLoadDemo(); break;
+        case 'file'         : this._handleLoadFile(); break;
+        case 'fileSequence' : this._handleLoadFiles(); break;
+        case 'url'          : this._handleLoadURL();  break;
+        case 'demo'         : this._handleLoadDemo(); break;
     }
 }
 
@@ -76,6 +79,25 @@ _handleLoadFile() {
     this.trigger('load', {
         type       : 'file',
         file       : file,
+        filetype   : filetype,
+        dimensions : dimensions,
+        precision  : precision,
+    });
+}
+
+_handleLoadFiles() {
+    const files = this._binds.files.getFilesArray();
+    if (files.length === 0) {
+        return;
+    }
+
+    const filetype = this._getVolumeTypeFromURL(files[0].name);
+    const dimensions = this._binds.dimensionsSequence.getValue();
+    const precision = parseInt(this._binds.precisionSequence.getValue(), 10);
+
+    this.trigger('load', {
+        type       : 'files',
+        files      : files,
         filetype   : filetype,
         dimensions : dimensions,
         precision  : precision,
@@ -106,18 +128,27 @@ _handleLoadDemo() {
 _handleTypeChange() {
     // TODO: switching panel
     switch (this._binds.type.getValue()) {
+        case 'fileSequence':
+            this._binds.filePanel.hide();
+            this._binds.fileSequencePanel.show();
+            this._binds.urlPanel.hide();
+            this._binds.demoPanel.hide();
+            break;
         case 'file':
             this._binds.filePanel.show();
+            this._binds.fileSequencePanel.hide();
             this._binds.urlPanel.hide();
             this._binds.demoPanel.hide();
             break;
         case 'url':
             this._binds.filePanel.hide();
+            this._binds.fileSequencePanel.hide();
             this._binds.urlPanel.show();
             this._binds.demoPanel.hide();
             break;
         case 'demo':
             this._binds.filePanel.hide();
+            this._binds.fileSequencePanel.hide();
             this._binds.urlPanel.hide();
             this._binds.demoPanel.show();
             break;
@@ -137,6 +168,18 @@ _handleFileChange() {
     this._updateLoadButtonAndProgressVisibility();
 }
 
+_handleFilesChange() {
+    const files = this._binds.files.getFilesArray();
+    if (files.length === 0) {
+        this._binds.rawSettingsPanel.hide();
+    } else {
+        const types = files.map(file => this._getVolumeTypeFromURL(file.name));
+        //Check if all types are raw
+        this._binds.rawSettingsSequencePanel.setVisible(types.every(type => type === "raw"));
+    }
+    this._updateLoadButtonAndProgressVisibility();
+}
+
 _handleURLChange() {
     this._updateLoadButtonAndProgressVisibility();
 }
@@ -148,8 +191,14 @@ _handleDemoChange() {
 _updateLoadButtonAndProgressVisibility() {
     switch (this._binds.type.getValue()) {
         case 'file':
-            const files = this._binds.file.getFiles();
+            var files = this._binds.file.getFiles();
             this._binds.loadButtonAndProgress.setVisible(files.length > 0);
+            break;
+        case 'fileSequence':
+            var files = this._binds.files.getFilesArray();
+            const types = files.map(file => this._getVolumeTypeFromURL(file.name));
+            //Check if all types are same
+            this._binds.loadButtonAndProgress.setVisible(files.length > 0 && types.every(type => type === types[0]));
             break;
         case 'url':
             const urlEmpty = this._binds.url.getValue() === '';
