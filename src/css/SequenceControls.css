@@ -49,3 +49,8 @@
     background: url(../images/icons/stop-solid.svg) no-repeat;
 }
 
+.sequence-controls .disabled {
+    cursor: not-allowed;
+    background-color: #cccccc;
+}
+
