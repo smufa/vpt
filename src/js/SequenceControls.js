@@ -38,17 +38,10 @@ class SequenceControls extends EventEmitter {
     }
 
     _handlePlay() {
-        this._$play.removeEventListener("click", this._handlePlay);
-        this._$play.addEventListener("click", this._handleStop);
         this.trigger('play');
-        this.removeClass(this._$play, "icon-play");
-        this.addClass(this._$play, "icon-stop");
-
-        this.disableStepControls();
     }
 
     _handleStop() {
-        this.stop();
         this.trigger('stop');
     }
 
@@ -68,7 +61,16 @@ class SequenceControls extends EventEmitter {
         this.trigger('jumpToLast');
     }
 
-    stop() {
+    enableStop() {
+        this._$play.addEventListener("click", this._handleStop);
+        this._$play.removeEventListener("click", this._handlePlay);
+        this.removeClass(this._$play, "icon-play");
+        this.addClass(this._$play, "icon-stop");
+
+        this.disableStepControls();
+    }
+
+    enablePlay() {
         this._$play.removeEventListener("click", this._handleStop);
         this._$play.addEventListener("click", this._handlePlay);
         this.removeClass(this._$play, "icon-stop");

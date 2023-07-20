@@ -37,12 +37,6 @@
             "type": "json",
             "mode": "files"
         },
-        "js/mappers": {
-            "output": "build/js/mappers.js.map",
-            "url": "js/mappers.js.map",
-            "type": "json",
-            "mode": "files"
-        },
         "glsl/shaders": {
             "output": "build/glsl/shaders.json",
             "url": "glsl/shaders.json",

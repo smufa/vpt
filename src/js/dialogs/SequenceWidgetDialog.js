@@ -29,6 +29,7 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._handleStepForward = this._handleStepForward.bind(this);
         this._handleStepBackward = this._handleStepBackward.bind(this);
         this._handleIntervalChange = this._handleIntervalChange.bind(this);
+        this._handleThresholdChange = this._handleThresholdChange.bind(this);
         this._handleRenderingTypeChange = this._handleRenderingTypeChange.bind(this);
         this._handleDownloadGif = this._handleDownloadGif.bind(this);
         this._handleDownloadZip = this._handleDownloadZip.bind(this);
@@ -41,10 +42,6 @@ class SequenceWidgetDialog extends AbstractDialog {
         this.renderNewVolumeWrapper();
     }
 
-    reset(readers) {
-        this._readers = readers;
-    }
-
     _addEventListeners() {
         this._$sequenceControls.addEventListener('play', this._handlePlay);
         this._$sequenceControls.addEventListener('stop', this._handleStop);
@@ -54,6 +51,7 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._$sequenceControls.addEventListener('stepBackward', this._handleStepBackward);
 
         this._binds.interval.addEventListener("change", this._handleIntervalChange);
+        this._binds.threshold.addEventListener("change", this._handleThresholdChange);
         this._binds.renderingType.addEventListener("change", this._handleRenderingTypeChange);
         this._binds.buttonDownloadGIF.addEventListener("click", this._handleDownloadGif);
         this._binds.buttonDownloadZIP.addEventListener("click", this._handleDownloadZip);
@@ -63,43 +61,52 @@ class SequenceWidgetDialog extends AbstractDialog {
 
     _handlePlay() {
         this.setIndex(this._currentIndex + 1);
-        this.renderNewVolumeWrapper(() => {
-            if(!this._stop) {
-                this._handlePlay();
-            } else {
+        this.renderNewVolumeWrapper(
+            () => {
+                    if(!this._stop) {
+                        this._handlePlay();
+                    } else {
+                        this._handleStop()
+                        this._stop = false;
+                    }
+                },
+            () => {
                 this._handleStop()
                 this._stop = false;
             }
-        },
-        () => {
-            this._handleStop()
-            this._stop = false;
-        })
+        );
     }
 
     _handleStop() {
         this._stop = true;
-        this._$sequenceControls.stop();
     }
 
     _handleJumpToLast() {
-        this.setIndex(this._readers.length-1);
-        this.renderNewVolumeWrapper();
+        if(!this._rendering) {
+            this.setIndex(this._readers.length-1);
+            this.renderNewVolumeWrapper();
+        }
     }
 
     _handleJumoToFirst() {
-        this.setIndex(0);
-        this.renderNewVolumeWrapper();
+        if(!this._rendering) {
+            this.setIndex(0);
+            this.renderNewVolumeWrapper();
+        }
     }
 
     _handleStepForward() {
-        this.incrementIndex();
-        this.renderNewVolumeWrapper();
+        if(!this._rendering) {
+            this.incrementIndex();
+            this.renderNewVolumeWrapper();
+        }
     }
 
     _handleStepBackward() {
-        this.decrementIndex();
-        this.renderNewVolumeWrapper();
+        if(!this._rendering) {
+            this.decrementIndex();
+            this.renderNewVolumeWrapper();
+        }
     }
 
     incrementIndex() {
@@ -119,22 +126,35 @@ class SequenceWidgetDialog extends AbstractDialog {
 
     renderNewVolumeWrapper(onResult, onError) {
         if(!this._rendering) {
+            this._$sequenceControls.disableStepControls();
+            this._$sequenceControls.enableStop();
             this._rendering = true;
             this.renderNewVolume().then(
                 () => {
-                    this._rendering = false;
                     if(this._binds.addOnRender.isChecked()) {
                         this._sequenceContext.addFrame(this._binds).then(
                             () => {
+                                this._rendering = false;
+                                this._$sequenceControls.enableStepControls();
+                                this._$sequenceControls.enablePlay();
                                 if(onResult) {
                                     onResult();
                                 }
                             }
                         );
+                    } else {
+                        this._rendering = false;
+                        this._$sequenceControls.enableStepControls();
+                        this._$sequenceControls.enablePlay();
+                        if(onResult) {
+                            onResult();
+                        }
                     }
                 },
                 () => {
                     this._rendering = false;
+                    this._$sequenceControls.enableStepControls();
+                    this._$sequenceControls.enablePlay();
                     if(onError) {
                         onError();
                     }
@@ -153,28 +173,118 @@ class SequenceWidgetDialog extends AbstractDialog {
             this._renderingContext.setVolume(this._readers[this._currentIndex]);
             switch(this._binds.renderingType.getValue()) {
                 case "fixed":
+                    console.log("Starting fixed")
                     setTimeout(() => {
+                        
                         this._renderingContext.stopRendering();
                         resolve();
-                        return;
                     }, this._binds.interval.value);
-
                     break;
                 case "convergence":
-                    //TODO
-                    //this._renderingContext.readPixels();
-                    resolve()
+                    console.log("Starting convergence")
+                    
+                    this.converge().then(
+                        () => {
+                            resolve();
+                        },
+                        () => {
+                            this._stop = false;
+                            console.log("Stopped")
+                            reject();
+                        }
+                    );
+                    
                     break;
                 default:
                     reject()
                     return;
             }
         });
+    }
+
+    converge() {
+        return new Promise((resolve, reject) => {
+            var pixelsPrev = this._renderingContext.readPixels();
+            var correlationPrev = 0;
+            var diffRatioPrev = 2;
+            this._interval = setInterval(() => {
+                if(this._stop) {
+                    clearInterval(this._interval);
+                    reject();
+                }
+                this._renderingContext.stopRendering();
+                var pixelsNew = this._renderingContext.readPixels();
+                var crossCorrelation = this.calculate(pixelsPrev, pixelsNew, 3);
+
+                var diffRatio = Math.abs((crossCorrelation - correlationPrev)/diffRatioPrev);
+                var percent = diffRatio*100;
+
+                var numberOfDecimals = -Math.floor( Math.log10(percent) + 1);
+                console.log(numberOfDecimals);
+
+                if(numberOfDecimals >= this._binds.threshold.getValue()) {
+                    clearInterval(this._interval);
+                    resolve();
+                } else {
+                    this._renderingContext.startRendering();
+                    pixelsPrev = pixelsNew;
+                    correlationPrev = crossCorrelation;
+                    diffRatio = diffRatio;
+                }                
+            }, this._binds.interval.value);
+        });
+    }
+
+    calculate(data1, data2, step) {
+        var mean1 = this.mean(data1);
+        var mean2 = this.mean(data2);
+
+        if (data1.length !== data2.length) {
+            throw new Error("Vectors don't have the same size.");
+        }
+        var numerator = 0;
+        var denumerator = 0;
+        var denumerator = 0;
+        var denumerator_2 = 0;
         
+        for (var i = 0; i < data1.length; i += step) {
+          numerator += (data1[i] - mean1) * (data2[i] - mean2);
+          denumerator += (data1[i] - mean1) * (data1[i] - mean1);
+          denumerator_2 += (data2[i] - mean2) * (data2[i] - mean2);
+        }
+
+        if(denumerator === 0 && denumerator_2 === 0) {
+          if(data1[i] === data2[i]) {
+            return 2;
+          } else {
+            return 0;
+          }
+        } else if(denumerator === 0) {
+          return null
+        } else if(denumerator_2 === 0) {
+          return null
+        }
+      
+        denumerator = Math.sqrt(denumerator * denumerator_2);
+      
+        return (numerator / denumerator)*2;
+    }
+
+    mean(data) {
+        var sum = 0;        
+        for (var i = 0; i < data.length; i+=this._step) {
+            sum += data[i];
+        }
+        return sum / data.length;
     }
 
     _handleIntervalChange() {
         this.reset();
+    }
+
+    _handleThresholdChange() {
+        //TODO bug where interval doesnt end
+        //this.reset();
     }
 
     _handleRenderingTypeChange() {
@@ -188,7 +298,7 @@ class SequenceWidgetDialog extends AbstractDialog {
                 this._binds.thresholdField.hide();
                 break;
             case "convergence":
-                this._binds.intervalField.hide();
+                this._binds.intervalField.show();
                 this._binds.thresholdField.show();
                 break;
         }
@@ -216,8 +326,12 @@ class SequenceWidgetDialog extends AbstractDialog {
 
     reset() {
         if(this._rendering) {
-            this._handleStop();
             this._renderingContext.stopRendering();
+        }
+        if(this._interval) {
+            this._stop = true;
+        } else {
+            this._stop = false;
         }
         this._rendering = false;
         this.renderNewVolumeWrapper();
