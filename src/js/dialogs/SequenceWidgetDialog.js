@@ -173,7 +173,7 @@ class SequenceWidgetDialog extends AbstractDialog {
             this._renderingContext.setVolume(this._readers[this._currentIndex]);
             switch(this._binds.renderingType.getValue()) {
                 case "fixed":
-                    console.log("Starting fixed")
+                    //console.log("Starting fixed")
                     setTimeout(() => {
                         
                         this._renderingContext.stopRendering();
@@ -181,8 +181,7 @@ class SequenceWidgetDialog extends AbstractDialog {
                     }, this._binds.interval.value);
                     break;
                 case "convergence":
-                    console.log("Starting convergence")
-                    
+                    //console.log("Starting convergence")
                     this.converge().then(
                         () => {
                             resolve();
@@ -214,13 +213,12 @@ class SequenceWidgetDialog extends AbstractDialog {
                 }
                 this._renderingContext.stopRendering();
                 var pixelsNew = this._renderingContext.readPixels();
-                var crossCorrelation = this.calculate(pixelsPrev, pixelsNew, 3);
+                var crossCorrelation = this.calculateNormalizedCorrelation(pixelsPrev, pixelsNew, 3);
 
                 var diffRatio = Math.abs((crossCorrelation - correlationPrev)/diffRatioPrev);
                 var percent = diffRatio*100;
 
                 var numberOfDecimals = -Math.floor( Math.log10(percent) + 1);
-                console.log(numberOfDecimals);
 
                 if(numberOfDecimals >= this._binds.threshold.getValue()) {
                     clearInterval(this._interval);
@@ -235,7 +233,7 @@ class SequenceWidgetDialog extends AbstractDialog {
         });
     }
 
-    calculate(data1, data2, step) {
+    calculateNormalizedCorrelation(data1, data2, step) {
         var mean1 = this.mean(data1);
         var mean2 = this.mean(data2);
 
