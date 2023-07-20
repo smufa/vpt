@@ -1,0 +1,51 @@
+/* #package css/main */
+
+.sequence-controls .button-group {
+    display: block;
+    text-align: center;
+    height: 20px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.sequence-controls .icon {
+    display:inline-block;
+    height: 20px;
+    width: 20px;
+    background-size: auto 100%;
+    display: inline-block;
+    margin-left: 2px;
+    margin-right: 2px;
+
+    color: var(--enabled-text-color);
+    cursor: pointer;
+}
+
+.sequence-controls .icon-play {
+    background: url(../images/icons/play-solid.svg) no-repeat;
+}
+
+.sequence-controls .icon-step-backward {
+    background: url(../images/icons/step-backward-solid.svg) no-repeat;
+}
+
+.sequence-controls .icon-backward {
+    background: url(../images/icons/backward-solid.svg) no-repeat;
+}
+
+.sequence-controls .icon-step-forward {
+    background: url(../images/icons/step-forward-solid.svg) no-repeat;
+}
+
+.sequence-controls .icon-forward {
+    background: url(../images/icons/forward-solid.svg) no-repeat;
+}
+
+.sequence-controls .icon-pause {
+    background: url(../images/icons/pause-solid.svg) no-repeat;
+}
+
+.sequence-controls .icon-stop {
+    background: url(../images/icons/stop-solid.svg) no-repeat;
+}
+

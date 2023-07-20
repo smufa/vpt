@@ -1,5 +1,6 @@
 // #package js/main
 
+// #include DraggableContainer.js
 // #include Accordion.js
 // #include Button.js
 // #include Checkbox.js
@@ -24,6 +25,7 @@ class UI {
 
 static get CLASS_FROM_TYPE() {
     return {
+        'draggable-container': DraggableContainer,
         'accordion'     : Accordion,
         'button'        : Button,
         'checkbox'      : Checkbox,
@@ -82,6 +84,9 @@ static create(spec) {
                 case 'field':
                 case 'panel':
                 case 'sidebar':
+                    object.add(childObject);
+                    break;
+                case 'draggable-container':
                     object.add(childObject);
                     break;
             }
