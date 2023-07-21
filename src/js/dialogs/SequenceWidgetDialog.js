@@ -40,6 +40,7 @@ class SequenceWidgetDialog extends AbstractDialog {
 
         this._sequenceContext = new SequenceContext(this._renderingContext);
         this.renderNewVolumeWrapper();
+        this._renderingContext.stopRendering();
     }
 
     _addEventListeners() {
@@ -170,7 +171,8 @@ class SequenceWidgetDialog extends AbstractDialog {
                 reject();
                 return;
             }
-            this._renderingContext.setVolume(this._readers[this._currentIndex]);
+            this._renderingContext.stopRendering();
+            this._renderingContext.setVolumes(this._readers[this._currentIndex]);
             switch(this._binds.renderingType.getValue()) {
                 case "fixed":
                     //console.log("Starting fixed")

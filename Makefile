@@ -1,5 +1,6 @@
 .PHONY: all
 all:
+	mkdir build
 	bin/packer
 
 .PHONY: clean
