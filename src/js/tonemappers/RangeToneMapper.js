@@ -9,8 +9,8 @@ constructor(gl, texture, options) {
     super(gl, texture, options);
 
     Object.assign(this, {
-        _min : 0,
-        _max : 1
+        _min : 3,
+        _color: [1,1,1]
     }, options);
 
     this._program = WebGL.buildPrograms(this._gl, {
@@ -36,7 +36,7 @@ _renderFrame() {
 
     gl.uniform1i(program.uniforms.uTexture, 0);
     gl.uniform1f(program.uniforms.uMin, this._min);
-    gl.uniform1f(program.uniforms.uMax, this._max);
+    gl.uniform3f(program.uniforms.backgroundColor, ...this._color);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }

@@ -20,12 +20,16 @@ precision mediump float;
 
 uniform mediump sampler2D uTexture;
 uniform float uMin;
-uniform float uMax;
+uniform vec3 backgroundColor;
 
 in vec2 vFragmentPosition;
 out vec4 color;
 
 void main() {
     vec4 src = texture(uTexture, vFragmentPosition);
-    color = (src - uMin) / (uMax - uMin);
+    if(src.r + src.g + src.b > uMin) {
+        color = vec4(backgroundColor, 0.0);
+    } else {
+        color = src;
+    }
 }
