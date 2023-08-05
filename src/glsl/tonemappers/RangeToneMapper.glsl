@@ -25,11 +25,19 @@ uniform vec3 backgroundColor;
 in vec2 vFragmentPosition;
 out vec4 color;
 
-void main() {
-    vec4 src = texture(uTexture, vFragmentPosition);
-    if(src.r + src.g + src.b > uMin) {
-        color = vec4(backgroundColor, 0.0);
-    } else {
-        color = src;
+void main(){
+    mat3 kernel = mat3(0.11,0.11,0.11,
+                       0.11,0.11,0.11,
+                       0.11,0.11,0.11);
+    vec2 size = vec2(textureSize(uTexture, 0));
+    vec2 cellSize = 1.0 / size;
+    for(int i=-1; i<=1; i++){
+        for(int j=-1; j<=1; j++){
+            vec2 vec = cellSize * vec2(float(i), float(j));
+            color += 
+                texture(uTexture, vFragmentPosition + vec) *
+                kernel[i][j];
+        }
     }
+    color[3] = 1.0; //alpha correction
 }
