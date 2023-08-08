@@ -42,6 +42,13 @@ constructor(renderer, options) {
         panel.add(this._tfwidgets[i]);
         this._binds.tftabs.add(""+i, panel);
         this._tfwidgets[i].addEventListener('change', () => {this._handleTFChange(i)});
+        if (i == 0) {
+            this._tfwidgets[i].loadFromJson(JSON.parse('[{"position":{"x":1,"y":0.4609375},"size":{"x":0.5889359102131049,"y":5.106744349470309},"color":{"r":1,"g":0,"b":0,"a":1}}]'));
+        } else if (i == 1) {
+            this._tfwidgets[i].loadFromJson(JSON.parse('[{"position":{"x":1,"y":0.51953125},"size":{"x":0.5889359102131049,"y":15.037725658404618},"color":{"r":0,"g":1,"b":0,"a":1}}]'));
+        } else if (i == 2) {
+            this._tfwidgets[i].loadFromJson(JSON.parse('[{"position":{"x":1,"y":0.51953125},"size":{"x":0.5889359102131049,"y":1.7342275316926914},"color":{"r":0,"g":0,"b":1,"a":1}}]'));
+        }
     }
 }
 
@@ -103,10 +110,10 @@ _handleChange() {
 _handleTFChange(id) {
     this._renderer.setTransferFunction(this._tfwidgets[id].getTransferFunction(), id);
 
-    this._renderer._channelContributions.x = this._tfwidgets[0]._channelContribution;
-    this._renderer._channelContributions.y = this._tfwidgets[1]._channelContribution;
-    this._renderer._channelContributions.z = this._tfwidgets[2]._channelContribution;
-    this._renderer._channelContributions.w = this._tfwidgets[3]._channelContribution;
+    //this._renderer._channelContributions.x = this._tfwidgets[0]._channelContribution;
+    //this._renderer._channelContributions.y = this._tfwidgets[1]._channelContribution;
+    //this._renderer._channelContributions.z = this._tfwidgets[2]._channelContribution;
+    //this._renderer._channelContributions.w = this._tfwidgets[3]._channelContribution;
 
     this._renderer.reset();
 }
