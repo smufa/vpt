@@ -39,6 +39,18 @@ class SequenceWidgetDialog extends AbstractDialog {
         this._addEventListeners();
 
         this._sequenceContext = new SequenceContext(this._renderingContext);
+        this._renderer = this._renderingContext.getRenderer();
+        let extinction = 16;
+        let albedo = 0.5;
+        let ratio = 1;
+        this._renderer.absorptionCoefficient = extinction * (1 - albedo);
+        this._renderer.scatteringCoefficient = extinction * albedo;
+        this._renderer.majorant = extinction * ratio;
+        this._renderer.maxBounces = 32;
+        this._renderer.steps = 32;
+        this._cameraControl = this._renderingContext._cameraController;
+        this._cameraControl._zoom(-0.7, false);
+        this._cameraControl._rotateAroundFocus(0, -1.6);
         this.renderNewVolumeWrapper();
         this._renderingContext.stopRendering();
     }
@@ -62,6 +74,7 @@ class SequenceWidgetDialog extends AbstractDialog {
 
     _handlePlay() {
         this.setIndex(this._currentIndex + 1);
+        this._cameraControl._rotateAroundFocus((3.14*2)/60, 0);
         this.renderNewVolumeWrapper(
             () => {
                     if(!this._stop) {
