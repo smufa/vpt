@@ -20,24 +20,22 @@ precision mediump float;
 
 uniform mediump sampler2D uTexture;
 uniform float uMin;
-uniform vec3 backgroundColor;
+const int N = 9;
+uniform float kernel[N*N];
 
 in vec2 vFragmentPosition;
 out vec4 color;
 
 void main(){
-    mat3 kernel = mat3(0.11,0.11,0.11,
-                       0.11,0.11,0.11,
-                       0.11,0.11,0.11);
     vec2 size = vec2(textureSize(uTexture, 0));
     vec2 cellSize = 1.0 / size;
-    for(int i=-1; i<=1; i++){
-        for(int j=-1; j<=1; j++){
-            vec2 vec = cellSize * vec2(float(i), float(j));
+    float pol = floor(float(N)*0.5);
+    for(int i=0; i<N; i++){
+        for(int j=0; j<N; j++){
             color += 
-                texture(uTexture, vFragmentPosition + vec) *
-                kernel[i][j];
+                texture(uTexture, vFragmentPosition + cellSize * vec2(float(i)-pol, float(j)-pol)) *
+                kernel[N*i + j];
+            // color += vec4(kernel[N*i + j], 0.0, 0.0, 1.0);
         }
     }
-    color[3] = 1.0; //alpha correction
 }
