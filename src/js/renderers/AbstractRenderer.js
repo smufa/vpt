@@ -110,6 +110,13 @@ addVolume(volume) {
     this.reset();
 }
 
+addVolumetoIndex(volume, index) {
+    if (this._volumes == undefined) this._volumes = [];
+    this._volumes[index] = volume;
+    this.reset();
+}
+
+
 setTransferFunction(transferFunction) {
     const gl = this._gl;
     gl.bindTexture(gl.TEXTURE_2D, this._transferFunction);

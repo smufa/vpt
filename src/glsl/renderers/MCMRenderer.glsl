@@ -221,6 +221,7 @@ vec4 sampleVolumeColor(vec3 position) {
     vec4 transferSample3 = vec4(0);
     float maxVolValue = volumeSample0.r;
     vec4 maxVolSample = transferSample0;
+    vec4 actualColor = vec4(volumeSample0.r, 0.0, 0.0, 0.0);
 
     if (uBilateral && !uBilateralGradient) {
         volumeSample0.r = bilateralFiltering3D(position, volumeSample0.r);
@@ -230,6 +231,7 @@ vec4 sampleVolumeColor(vec3 position) {
 
     if (uNumberOfChannels > 1) {
         vec2 volumeSample1 = texture(uVolume1, position).rg ;
+        actualColor.g = volumeSample1.r;
         transferSample1 = texture(uTransferFunction1, volumeSample1) * channelContribs.y;
 
         if (uBilateral && !uBilateralGradient) {
@@ -247,6 +249,7 @@ vec4 sampleVolumeColor(vec3 position) {
     }
     if (uNumberOfChannels > 2) {
         vec2 volumeSample2 = texture(uVolume2, position).rg ;
+        actualColor.b = volumeSample2.r;
         transferSample2 = texture(uTransferFunction2, volumeSample2) * channelContribs.z;
 
         if (uBilateral && !uBilateralGradient) {
@@ -262,6 +265,7 @@ vec4 sampleVolumeColor(vec3 position) {
     }
     if (uNumberOfChannels > 3) {
         vec2 volumeSample3 = texture(uVolume3, position).rg ;
+        actualColor.a = volumeSample3.r;
         transferSample3 = texture(uTransferFunction3, volumeSample3) * channelContribs.w;
 
         if (uBilateral && !uBilateralGradient) {
@@ -275,6 +279,8 @@ vec4 sampleVolumeColor(vec3 position) {
              maxVolSample = transferSample3;
         }
     }
+
+    return actualColor;
 
     if (!uMaxContribution) {
         float sumA = (transferSample0.a + transferSample1.a + transferSample2.a + transferSample3.a);

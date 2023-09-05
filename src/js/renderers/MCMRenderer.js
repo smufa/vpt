@@ -135,24 +135,26 @@ _integrateFrame() {
     gl.activeTexture(gl.TEXTURE4);
     gl.bindTexture(gl.TEXTURE_2D, this._environmentTexture);
 
-    gl.activeTexture(gl.TEXTURE5);
-    gl.bindTexture(gl.TEXTURE_2D, this._transferFunctions[0]);
-    gl.activeTexture(gl.TEXTURE6);
-    gl.bindTexture(gl.TEXTURE_3D, this._volumes[0].getTexture());
+    if (this._volumes[0] != null) {
+        gl.activeTexture(gl.TEXTURE5);
+        gl.bindTexture(gl.TEXTURE_2D, this._transferFunctions[0]);
+        gl.activeTexture(gl.TEXTURE6);
+        gl.bindTexture(gl.TEXTURE_3D, this._volumes[0].getTexture());
+    }
 
-    if (this._numberOfChannels > 1) {
+    if (this._volumes[1] != null && this._numberOfChannels > 1) {
         gl.activeTexture(gl.TEXTURE7);
         gl.bindTexture(gl.TEXTURE_2D, this._transferFunctions[1]);
         gl.activeTexture(gl.TEXTURE8);
         gl.bindTexture(gl.TEXTURE_3D, this._volumes[1].getTexture());
     }
-    if (this._numberOfChannels > 2) {
+    if (this._volumes[2] != null && this._numberOfChannels > 2) {
         gl.activeTexture(gl.TEXTURE9);
         gl.bindTexture(gl.TEXTURE_2D, this._transferFunctions[2]);
         gl.activeTexture(gl.TEXTURE10);
         gl.bindTexture(gl.TEXTURE_3D, this._volumes[2].getTexture());
     }
-    if (this._numberOfChannels > 3) {
+    if (this._volumes[3] != null && this._numberOfChannels > 3) {
         gl.activeTexture(gl.TEXTURE11);
         gl.bindTexture(gl.TEXTURE_2D, this._transferFunctions[3]);
         gl.activeTexture(gl.TEXTURE12);

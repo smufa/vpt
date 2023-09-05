@@ -40,7 +40,7 @@ class SequenceWidgetDialog extends AbstractDialog {
 
         this._sequenceContext = new SequenceContext(this._renderingContext);
         this._renderer = this._renderingContext.getRenderer();
-        let extinction = 16;
+        let extinction = 6;
         let albedo = 0.5;
         let ratio = 1;
         this._renderer.absorptionCoefficient = extinction * (1 - albedo);
@@ -73,6 +73,10 @@ class SequenceWidgetDialog extends AbstractDialog {
     }
 
     _handlePlay() {
+        if (!this._start) {
+            this._start = performance.now();
+            console.log("zacetek", this._start);
+        }
         this.setIndex(this._currentIndex + 1);
         this._cameraControl._rotateAroundFocus((3.14*2)/60, 0);
         this.renderNewVolumeWrapper(
@@ -92,6 +96,8 @@ class SequenceWidgetDialog extends AbstractDialog {
     }
 
     _handleStop() {
+        console.log("konec", performance.now());
+        console.log("razlika", performance.now() - this._start);
         this._stop = true;
     }
 
@@ -235,7 +241,7 @@ class SequenceWidgetDialog extends AbstractDialog {
 
                 var numberOfDecimals = -Math.floor( Math.log10(percent) + 1);
 
-                if(numberOfDecimals >= this._binds.threshold.getValue()) {
+                if(numberOfDecimals >= this._binds.threshold.getValue() && diffRatio != 0 && numberOfDecimals != Infinity) {
                     clearInterval(this._interval);
                     resolve();
                 } else {
